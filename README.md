@@ -1,4 +1,4 @@
-[# Метроном Веб-Приложение]([url](https://r3dmg.github.io/metronome/))
+# Метроном Веб-Приложение [(Preview)](https://r3dmg.github.io/metronome/)
 
 ## Структура проекта
 
