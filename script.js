@@ -303,8 +303,8 @@ window.addEventListener('DOMContentLoaded',()=>{
     const DRUMS_PATTERN={
       4:{
         4:{
-          closed_hithat:{ inbetween:[[1,5,9,13],[1,5,9,13]], volume:0.5, duration:0.08 },
-          open_hihat:{ inbetween:[[],[]], volume:0.3, duration:0.4 },
+          closed_hithat:{ inbetween:[[1,5,9,13],[1,5,9,13]], volume:0.4, duration:0.08 },
+          open_hihat:{ inbetween:[[],[]], volume:0.2, duration:0.4 },
           crash_cymbal:{ first_bar:[1], volume:0.5, duration:0.7 },
           kick:{ inbetween:[[1,9,11]], volume:0.95, duration:0.12 },
           snare:{ inbetween:[[5,13]], filler:[15,16], volume:1.0, duration:0.12 }
@@ -498,4 +498,16 @@ window.addEventListener('DOMContentLoaded',()=>{
       const prev=bpm(); bpmInput.value=prev+1; bpmInput.dispatchEvent(new Event('input')); console.assert(Number(bpmRange.value)===prev+1,'bpmInput->bpmRange'); bpmRange.value=prev; bpmRange.dispatchEvent(new Event('input')); console.assert(Number(bpmInput.value)===prev,'bpmRange->bpmInput');
       console.groupEnd();
     }catch(e){ console.error('Self-tests error', e); }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault(); // Prevent page scroll
+            if (isRunning) {
+                stop();
+            } else {
+                start();
+            }
+        }
+    });
   });
