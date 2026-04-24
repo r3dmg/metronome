@@ -3,127 +3,127 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Метроном</title>
+  <title>metronome</title>
   <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="%230077cc"/></svg>'>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="card">
-    <!-- Tabs for profiles -->
-    <div class="tabs">
-      <button class="tab-button active" data-profile="0">Profile 1</button>
-      <button class="tab-button" data-profile="1">Profile 2</button>
-      <button class="tab-button" data-profile="2">Profile 3</button>
-      <button class="tab-button" data-profile="3">Profile 4</button>
-      <button class="tab-button" data-profile="4">Profile 5</button>
-      <button class="tab-button" id="pentatonicTab" style="display:none;">Pentatonic Trainer</button>
-    </div>
+  <div class="container">
+    <header>
+      <h1>Metronome</h1>
+      <div id="totalTime">00:00</div>
+    </header>
 
-    <div id="totalTime">Total Time: 00:00</div>
+    <!-- Tabs -->
+    <nav class="tabs">
+      <button class="tab active" data-profile="0">1</button>
+      <button class="tab" data-profile="1">2</button>
+      <button class="tab" data-profile="2">3</button>
+      <button class="tab" data-profile="3">4</button>
+      <button class="tab" data-profile="4">5</button>
+    </nav>
 
-    <div class="row">
-      <label>BPM</label>
-      <input id="bpmInput" type="number" value="120" min="20" max="300" step="1" />
-      <input id="bpmRange" type="range" value="120" min="20" max="300" step="1" />
-      <label style="margin-left:auto">Time Signature</label>
-      <div style="display:flex;align-items:center;gap:6px">
-        <select id="beatsPerBar">
-          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-          <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
-          <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-          <option value="10">10</option><option value="11">11</option><option value="12">12</option>
-        </select>
-        <span>/</span>
-        <select id="beatUnit">
-          <option value="2">2</option>
-          <option value="4" selected>4</option>
-          <option value="8">8</option>
-          <option value="16">16</option>
-        </select>
+    <!-- Main Controls -->
+    <section class="controls">
+      <div class="control bpm">
+        <label>BPM</label>
+        <div class="input-group">
+          <input id="bpmInput" type="number" value="120" min="20" max="300" />
+          <input id="bpmRange" type="range" value="120" min="20" max="300" />
+        </div>
       </div>
-    </div>
+      <div class="control time-sig">
+        <label>Time Signature</label>
+        <div class="input-group">
+          <select id="beatsPerBar">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+          </select>
+          <span>/</span>
+          <select id="beatUnit">
+            <option value="2">2</option><option value="4" selected>4</option><option value="8">8</option><option value="16">16</option>
+          </select>
+        </div>
+      </div>
+      <div class="control buttons">
+        <button id="startBtn" class="btn primary">Start</button>
+        <button id="stopBtn" class="btn secondary" disabled>Stop</button>
+      </div>
+    </section>
 
-    <div class="row viz">
+    <!-- Visualizer -->
+    <section class="visualizer">
       <div class="progress">
-        <div class="progress-track">
-          <div id="progressFill" class="progress-fill"></div>
+        <div class="track">
+          <div id="progressFill" class="fill"></div>
           <div id="bar" class="segments"></div>
         </div>
       </div>
-      <span class="timer" id="nextStepTimer">—:—</span>
-    </div>
+      <div class="timer" id="nextStepTimer">—:—</div>
+    </section>
 
-    <div class="row">
-      <button id="startBtn" class="primary">Go</button>
-      <button id="stopBtn" class="danger" disabled>Stop</button>
-      <label style="margin-left:auto"><input id="countToggle" type="checkbox" checked /> Count </label>
-      <label><input id="drumsToggle" type="checkbox" checked /> Drums </label>
-      <label>Volume</label>
-      <input id="drumsVol" type="range" min="0" max="1" step="0.01" value="0.8" />
-    </div>
+    <!-- Options -->
+    <section class="options">
+      <label class="option">
+        <input id="countToggle" type="checkbox" checked />
+        <span>Countdown</span>
+      </label>
+      <label class="option">
+        <input id="drumsToggle" type="checkbox" checked />
+        <span>Drums</span>
+      </label>
+      <div class="option volume">
+        <label for="drumsVol">Volume</label>
+        <input id="drumsVol" type="range" min="0" max="1" step="0.01" value="0.8" />
+      </div>
+    </section>
 
-    <!-- Speed up (Auto-BPM) -->
-    <div class="group" id="autoGroup">
-      <div class="row" id="autoRowChecks">
-        <label><input id="autoBpmToggle" type="checkbox" /> Speed up</label>
-        <label><input id="autoLoop" type="checkbox" checked /> Loop</label>
-        <label><input id="autoReverse" type="checkbox" /> Reverse</label>
+    <!-- Auto-BPM -->
+    <section class="auto-bpm" id="autoGroup">
+      <h3>Auto-BPM</h3>
+      <div class="auto-controls">
+        <label class="toggle">
+          <input id="autoBpmToggle" type="checkbox" />
+          <span>Enable</span>
+        </label>
+        <label class="toggle">
+          <input id="autoLoop" type="checkbox" checked />
+          <span>Loop</span>
+        </label>
+        <label class="toggle">
+          <input id="autoReverse" type="checkbox" />
+          <span>Reverse</span>
+        </label>
+        <button id="autoResetBtn" class="btn small">Reset</button>
       </div>
-      <div class="row" id="autoRowInputs">
-        <label>Min</label>
-        <input id="autoMin" type="number" min="20" max="300" step="1" value="100" />
-        <label>Max</label>
-        <input id="autoMax" type="number" min="20" max="300" step="1" value="140" />
-        <label>Increment</label>
-        <input id="autoStep" type="number" min="1" max="50" step="1" value="2" />
-        <label>Every</label>
-        <input id="autoEvery" type="number" min="1" max="256" step="1" value="4" />
-        <select id="autoUnit">
-          <option value="bars" selected>Bars</option>
-          <option value="minutes">Minute</option>
-        </select>
+      <div class="auto-inputs">
+        <div class="input-row">
+          <label for="autoMin">Min BPM</label>
+          <input id="autoMin" type="number" min="20" max="300" value="100" />
+        </div>
+        <div class="input-row">
+          <label for="autoMax">Max BPM</label>
+          <input id="autoMax" type="number" min="20" max="300" value="140" />
+        </div>
+        <div class="input-row">
+          <label for="autoStep">Step</label>
+          <input id="autoStep" type="number" min="1" max="50" value="2" />
+        </div>
+        <div class="input-row">
+          <label for="autoEvery">Every</label>
+          <input id="autoEvery" type="number" min="1" max="256" value="4" />
+          <select id="autoUnit">
+            <option value="bars" selected>Bars</option>
+            <option value="minutes">Minutes</option>
+          </select>
+        </div>
       </div>
-      <div class="row" id="autoRowReset">
-        <button id="autoResetBtn" title="Сбросить BPM к минимуму">Reset</button>
-      </div>
-    </div>
+    </section>
 
-    <div class="row" style="color:var(--sub);font-size:12px;margin-top:20px">Inspired — accelonome.com</div>
-  </div>
-
-  <div id="countdown"></div>
-
-  <div id="pentatonicTrainer" style="display:none;">
-    <div class="card">
-      <h2>Pentatonic Trainer</h2>
-      <div class="row">
-        <label>Key:</label>
-        <select id="keySelect">
-          <option value="C">C</option>
-          <option value="D">D</option>
-          <option value="E">E</option>
-          <option value="F">F</option>
-          <option value="G">G</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-        </select>
-        <label>Scale:</label>
-        <select id="scaleTypeSelect">
-          <option value="pentatonic" selected>Pentatonic</option>
-          <option value="major">Major Scale</option>
-        </select>
-        <label>Type:</label>
-        <select id="typeSelect">
-          <option value="major" selected>Major</option>
-          <option value="minor">Minor</option>
-        </select>
-      </div>
-      <div id="fretboard"></div>
-      <div id="fretNumbers"></div>
-      <div class="row">
-        <button id="backToMetronomeBtn" class="danger">Back to Metronome</button>
-      </div>
-    </div>
+    <!-- Countdown -->
+    <div id="countdown">3</div>
   </div>
 
   <script src="script.js"></script>

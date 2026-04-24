@@ -12,131 +12,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     const drumsVol=document.getElementById('drumsVol');
     const countToggle=document.getElementById('countToggle');
     const countdownDiv = document.getElementById('countdown');
-    const pentatonicTab = document.getElementById('pentatonicTab');
-    const pentatonicTrainer = document.getElementById('pentatonicTrainer');
-    const keySelect = document.getElementById('keySelect');
-    const scaleTypeSelect = document.getElementById('scaleTypeSelect');
-    const typeSelect = document.getElementById('typeSelect');
-    const backToMetronomeBtn = document.getElementById('backToMetronomeBtn');
-    const fretboard = document.getElementById('fretboard');
-    const fretNumbers = document.getElementById('fretNumbers');
-
-    // Pentatonic notes
-    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const strings = ['E', 'A', 'D', 'G', 'B', 'E']; // Low to high
-
-    function getScaleNotes(key, type, scaleType) {
-        const keyIndex = notes.indexOf(key);
-        let intervals;
-        if (scaleType === 'pentatonic') {
-            intervals = type === 'major' ? [0, 2, 4, 7, 9] : [0, 3, 5, 7, 10];
-        } else if (scaleType === 'major') {
-            intervals = [0, 2, 4, 5, 7, 9, 11];
-        }
-        const scale = [];
-        for (let i = 0; i < 12; i++) {
-            if (intervals.includes(i)) {
-                scale.push(notes[(keyIndex + i) % 12]);
-            }
-        }
-        return scale;
-    }
-
-    function createFretboard() {
-        fretboard.innerHTML = '';
-        fretNumbers.innerHTML = '';
-        // Add fret numbers
-        for (let fret = 0; fret < 13; fret++) {
-            const numberDiv = document.createElement('div');
-            numberDiv.className = 'fret-number';
-            numberDiv.textContent = fret;
-            fretNumbers.appendChild(numberDiv);
-        }
-        // Add frets
-        for (let string = 5; string >= 0; string--) {
-            for (let fret = 0; fret < 13; fret++) {
-                const fretDiv = document.createElement('div');
-                fretDiv.className = 'fret';
-                fretDiv.dataset.string = string;
-                fretDiv.dataset.fret = fret;
-                const noteIndex = (notes.indexOf(strings[string]) + fret) % 12;
-                fretDiv.textContent = notes[noteIndex];
-                fretboard.appendChild(fretDiv);
-            }
-        }
-    }
-
-    function highlightScale(scale, tonic) {
-        document.querySelectorAll('.fret').forEach(fret => {
-            const note = fret.textContent;
-            fret.classList.remove('highlight', 'tonic');
-            if (scale.includes(note)) {
-                fret.classList.add('highlight');
-                if (note === tonic) {
-                    fret.classList.add('tonic');
-                }
-            }
-            fret.classList.remove('random');
-        });
-    }
-
-    function showRandomNote(key, type, scaleType) {
-        const scaleNotes = getScaleNotes(key, type, scaleType);
-        const frets = document.querySelectorAll('.fret');
-        frets.forEach(f => f.classList.remove('random'));
-        const highlighted = Array.from(frets).filter(f => f.classList.contains('highlight'));
-        if (highlighted.length > 0) {
-            const randomFret = highlighted[Math.floor(Math.random() * highlighted.length)];
-            randomFret.classList.add('random');
-        }
-    }
-
-    pentatonicTab.addEventListener('click', () => {
-        document.querySelector('.card').style.display = 'none';
-        pentatonicTrainer.style.display = 'block';
-        createFretboard();
-        const key = keySelect.value;
-        const type = typeSelect.value;
-        const scaleType = scaleTypeSelect.value;
-        const scale = getScaleNotes(key, type, scaleType);
-        highlightScale(scale, key);
-    });
-
-    backToMetronomeBtn.addEventListener('click', () => {
-        pentatonicTrainer.style.display = 'none';
-        document.querySelector('.card').style.display = 'block';
-    });
-
-    keySelect.addEventListener('change', () => {
-        const key = keySelect.value;
-        const type = typeSelect.value;
-        const scaleType = scaleTypeSelect.value;
-        const scale = getScaleNotes(key, type, scaleType);
-        highlightScale(scale, key);
-    });
-
-    scaleTypeSelect.addEventListener('change', () => {
-        const scaleType = scaleTypeSelect.value;
-        if (scaleType === 'major') {
-            typeSelect.style.display = 'none';
-            typeSelect.previousElementSibling.style.display = 'none';
-        } else {
-            typeSelect.style.display = '';
-            typeSelect.previousElementSibling.style.display = '';
-        }
-        const key = keySelect.value;
-        const type = typeSelect.value;
-        const scale = getScaleNotes(key, type, scaleType);
-        highlightScale(scale, key);
-    });
-
-    typeSelect.addEventListener('change', () => {
-        const key = keySelect.value;
-        const type = typeSelect.value;
-        const scaleType = scaleTypeSelect.value;
-        const scale = getScaleNotes(key, type, scaleType);
-        highlightScale(scale, key);
-    });
 
     // Auto‑BPM
     const autoGroup=document.getElementById('autoGroup');
@@ -260,10 +135,10 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
 
     // Tab buttons
-    document.querySelectorAll('.tab-button').forEach(btn => {
+    document.querySelectorAll('.tab').forEach(btn => {
         btn.addEventListener('click', () => {
             saveProfile(currentProfile);
-            const activeBtn = document.querySelector('.tab-button.active');
+            const activeBtn = document.querySelector('.tab.active');
             if (activeBtn) activeBtn.classList.remove('active');
             btn.classList.add('active');
             currentProfile = Number(btn.dataset.profile);
@@ -282,7 +157,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     const scheduleAhead=0.1; // sec
 
     // Состояния
-    let patternAlt=0, barsSinceStart=0, lastBeatIndex=null;
+    let patternAlt=0, barsSinceStart=0, lastBeatIndex=null, currentBar=1;
     let autoBarCounter=0, autoDir=1, autoElapsedSec=0, autoElapsedSecApprox=0, autoLastUIStamp=0;
     let runToken=0; let visualTimers=[]; let uiTimerID=null;
     let crashOnNextDownbeat=false;
@@ -299,15 +174,40 @@ window.addEventListener('DOMContentLoaded',()=>{
       tom: 'audio/tom.wav'
     };
 
-    // === Паттерн 4/4 (закрытый хет на четвертях, snare на 2 и 4) ===
+    // === Паттерн барабанов из Accelonome ===
     const DRUMS_PATTERN={
       4:{
         4:{
-          closed_hithat:{ inbetween:[[1,5,9,13],[1,5,9,13]], volume:0.3, duration:0.08 },
-          open_hihat:{ inbetween:[[],[]], volume:0.2, duration:0.4 },
-          crash_cymbal:{ first_bar:[1], volume:0.5, duration:0.7 },
-          kick:{ inbetween:[[1,9,11]], volume:0.95, duration:0.12 },
-          snare:{ inbetween:[[5,13]], filler:[15,16], volume:1.0, duration:0.12 }
+          "open_hihat": { "inbetween": [[], [15]], "filler": [], "volume": 0.3, "duration": 0.4 },
+          "closed_hithat": { "inbetween": [[3, 7, 11, 15], [3, 7, 11]], "volume": 0.05, "duration": 1 },
+          "crash_cymbal": { "first_bar": [1], "inbetween": [], "volume": 0.5, "duration": 2 },
+          "kick": { "inbetween": [[1, 9, 11]], "volume": 0.95, "duration": 1 },
+          "snare": { "inbetween": [[5, 13]], "filler": [5, 13, 15, 16], "volume": 1, "duration": 1 }
+        },
+        5:{
+          "closed_hithat": { "inbetween": [[1, 5, 9, 13, 17]], "volume": 0.05, "duration": 1 },
+          "crash_cymbal": { "first_bar": [1], "inbetween": [], "volume": 0.5, "duration": 2 },
+          "kick": { "inbetween": [[1]], "volume": 0.95, "duration": 1 },
+          "snare": { "inbetween": [[13]], "volume": 0.8, "duration": 1 },
+          // "tom": { "filler": [18], "inbetween": [], "volume": 0.9, "duration": 1 }
+        },
+        6:{
+          "open_hihat": { "inbetween": [[], [11]], "filler": [], "volume": 0.3, "duration": 0.5 },
+          "closed_hithat": { "inbetween": [[1,3,5,7,9,11,13,15,17,19], [1,3,5,7,9,11,13,15,17]], "volume": 0.05, "duration": 1 },
+          "crash_cymbal": { "first_bar": [1], "inbetween": [], "volume": 0.5, "duration": 2 },
+          "kick": { "inbetween": [[1]], "volume": 0.95, "duration": 1 },
+          "snare": { "inbetween": [[7]], "filler": [7,9,10], "volume": 0.8, "duration": 1 },
+          "tom": { "filler": [11], "inbetween": [], "volume": 1, "duration": 1 }
+        }
+      },
+      8:{
+        6:{
+          "open_hihat": { "inbetween": [[], [11]], "filler": [], "volume": 0.3, "duration": 0.5 },
+          "closed_hithat": { "inbetween": [[1,3,5,7,9,11,13,15,17,19], [1,3,5,7,9,11,13,15,17]], "volume": 0.05, "duration": 1 },
+          "crash_cymbal": { "first_bar": [1], "inbetween": [], "volume": 0.5, "duration": 2 },
+          "kick": { "inbetween": [[1]], "volume": 0.95, "duration": 1 },
+          "snare": { "inbetween": [[7]], "filler": [7,9,10], "volume": 0.8, "duration": 1 },
+          "tom": { "filler": [11], "inbetween": [], "volume": 1, "duration": 1 }
         }
       }
     };
@@ -316,7 +216,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     function bpm(){return Math.min(300,Math.max(20,Number(bpmInput.value)||120));}
     function spb(){ return (60/bpm())*(4/denom()); }
     function beatsPerBar(){return Number(beatsPerBarSel.value)||4;}
-    function stepsPerBarForDenominator(den){ return 16; }
+    function stepsPerBarForDenominator(den){ return den <= 8 ? 20 : 16; }
 
     function initAudio(){
       if(audioCtx) return;
@@ -360,7 +260,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       const playFiller = shouldPlayFiller();
 
       let trigger=()=>{};
-      function scheduleList(list, v, d){ if(!Array.isArray(list)) return; for(const idx of list){ const s=(idx-1); if(s>=from && s<toEx){ const when=barStart + s*stepDur; trigger(when,v,d); } } }
+      function scheduleList(list, v, d){ if(!Array.isArray(list)) return; for(const idx of list){ const s=(idx-1); if(s>=from && s<toEx){ const when=t; trigger(when,v,d); } } }
 
       for(const name in pat){
         const cfgI=pat[name]; const v=Number(cfgI.volume||1); const d=Number(cfgI.duration||0.2);
@@ -382,6 +282,59 @@ window.addEventListener('DOMContentLoaded',()=>{
       }
     }
 
+    // Schedule drums for the bar, like in Accelonome
+    function scheduleDrums(t){
+      if(!drumsToggle.checked) return;
+      const den = denom();
+      const num = beatsPerBar();
+      const pat = DRUMS_PATTERN[den] && DRUMS_PATTERN[den][num];
+      if(!pat) return;
+      
+      // Check if we should play filler (last bar before BPM change)
+      let shouldPlayFiller = false;
+      const cfg = autoCfg();
+      if(cfg.enabled && currentBar > 1) {
+        if(cfg.unit === 'bars') {
+          const barsNeed = cfg.barsV || 1;
+          shouldPlayFiller = autoBarCounter === barsNeed - 1;
+        } else {
+          const need = (cfg.minutesV || 1) * 60;
+          const remaining = Math.max(0, need - autoElapsedSec);
+          shouldPlayFiller = remaining <= num * spb() + 1e-6;
+        }
+      }
+      
+      const sixteenthTime = 60.0 / (bpm() * 4);
+      for (const [instrument, config] of Object.entries(pat)) {
+        let beat = null;
+        if (currentBar == 1 && 'first_bar' in config) {
+          beat = config['first_bar'];
+        } else if (shouldPlayFiller && 'filler' in config) {
+          beat = config['filler'];
+        } else if (config['inbetween'].length >= 1) {
+          beat = config['inbetween'][0];
+        } else {
+          continue;
+        }
+        for (const sixteenthNote of beat) {
+          const volume = config['volume'];
+          const when = t + (sixteenthNote - 1) * sixteenthTime;
+          if(instrument === 'kick') playKick(when, volume);
+          else if(instrument === 'snare') playSnare(when, volume);
+          else if(instrument === 'closed_hithat' || instrument === 'closed_hihat') playHatClosed(when, volume);
+          else if(instrument === 'open_hihat') playHatOpen(when, volume);
+          else if(instrument === 'crash_cymbal') playCrash(when, volume);
+          else if(instrument === 'tom') playTom(when, volume);
+        }
+      }
+      
+      // Play crash on first beat if tempo just changed
+      if(drumsToggle.checked && crashOnNextDownbeat) {
+        playCrash(t, 0.5);
+        crashOnNextDownbeat = false;
+      }
+    }
+
     // Визуализатор
     function renderBar(){ bar.innerHTML=''; const n=beatsPerBar(); bar.style.gridTemplateColumns='repeat('+n+',1fr)'; for(let i=0;i<n;i++){ const d=document.createElement('div'); d.className='seg'; bar.appendChild(d); } if(progressFill){ progressFill.style.transition='none'; progressFill.style.width='0%'; } }
     function updateBar(idx){ const n=bar.children.length||1; const stepPct=100/n; const targetPct=Math.min(100,(idx+1)*stepPct); const dur=spb(); if(progressFill){ progressFill.style.transition='width '+dur+'s linear'; if(idx===0){ progressFill.style.transition='none'; progressFill.style.width='0%'; requestAnimationFrame(()=>{ progressFill.style.transition='width '+dur+'s linear'; progressFill.style.width=stepPct+'%'; }); } else { progressFill.style.width=targetPct+'%'; } } }
@@ -392,7 +345,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     function updateBarsCounterUI(){ const cfg=autoCfg(); if(!cfg.enabled || cfg.unit!=='bars'){ return; } const total = cfg.barsV||1; const cur = Math.min(total, (autoBarCounter||0) + 1); nextStepTimer.textContent = cur + '/' + total; }
     function autoCfg(){ const en=autoToggle.checked; const minV=Math.min(300,Math.max(20,Number(autoMin.value)||100)); const maxV=Math.min(300,Math.max(20,Number(autoMax.value)||140)); const stepV=Math.max(1,Math.floor(Number(autoStep.value)||1)); const unit=autoUnit.value; const each=Number(autoEvery.value)||4; const barsV=unit==='bars'?Math.max(1,Math.floor(each)):null; const minutesV=unit==='minutes'?Math.max(0.1,each):null; const loopV=autoLoop.checked; const reverse=autoReverse.checked; return {enabled:en,minV:Math.min(minV,maxV),maxV:Math.max(minV,maxV),stepV,unit,barsV,minutesV,loopV,reverse}; }
     function applyBpm(v){ v=Math.round(Math.min(300,Math.max(20,v))); bpmInput.value=v; bpmRange.value=v; }
-    function updateAutoUI(){ const en=autoToggle.checked; autoGroup.classList.toggle('disabled',!en); [autoMin,autoMax,autoStep,autoEvery,autoUnit,autoLoop,autoReverse,autoResetBtn].forEach(el=>el.disabled=!en); const cfg=autoCfg(); if(!en){ nextStepTimer.style.visibility='hidden'; nextStepTimer.textContent='—:—'; return; } if(cfg.unit==='minutes'){ nextStepTimer.style.visibility='visible'; updateTimerUI(); } else { nextStepTimer.style.visibility='visible'; updateBarsCounterUI(); } }
+    function updateAutoUI(){ const en=autoToggle.checked; if(autoGroup) autoGroup.classList.toggle('disabled',!en); [autoMin,autoMax,autoStep,autoEvery,autoUnit,autoLoop,autoReverse,autoResetBtn].forEach(el=>el.disabled=!en); const cfg=autoCfg(); if(!en){ nextStepTimer.style.visibility='hidden'; nextStepTimer.textContent='—:—'; return; } if(cfg.unit==='minutes'){ nextStepTimer.style.visibility='visible'; updateTimerUI(); } else { nextStepTimer.style.visibility='visible'; updateBarsCounterUI(); } }
 
     function fmtTime(sec){ sec=Math.max(0,sec); const m=Math.floor(sec/60); const s=Math.floor(sec%60); return m+":"+String(s).padStart(2,'0'); }
     function updateTimerUI(){ const cfg=autoCfg(); if(!isRunning||!cfg.enabled||cfg.unit!=='minutes')return; const need=(cfg.minutesV||1)*60; const extra=Math.max(0,(performance.now()-autoLastUIStamp)/1000); const elapsed=autoElapsedSecApprox+extra; const remain=Math.max(0,need-elapsed); nextStepTimer.textContent=fmtTime(remain); }
@@ -427,21 +380,16 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
 
     // Планировщик аудио
-    function nextNote(){ nextNoteTime += spb(); currentBeat = (currentBeat+1) % beatsPerBar(); if(currentBeat===0){ barsSinceStart++; patternAlt=1-patternAlt; } }
+    function nextNote(){ nextNoteTime += spb(); currentBeat = (currentBeat+1) % beatsPerBar(); if(currentBeat===0){ barsSinceStart++; patternAlt=1-patternAlt; currentBar++; } }
     function scheduler(){
       while(nextNoteTime < audioCtx.currentTime + scheduleAhead){
         const accented = currentBeat===0;
         clickAt(nextNoteTime, accented);
-        // Паттерны и визуал планируем как раньше
-        scheduleDrumsFromPattern(currentBeat, nextNoteTime);
-        scheduleVisual(currentBeat, nextNoteTime);
-        // ВАЖНО: сначала решаем, произошло ли авто‑изменение BPM на этом даунбите
+        // ВАЖНО: сначала обновляем счётчик тактов/времени
         maybeAutoAdvance(currentBeat);
-        // Теперь ставим Crash на ЭТОТ первый удар, если стартуем или только что изменили BPM
-        if(drumsToggle && drumsToggle.checked && accented && (barsSinceStart===0 || crashOnNextDownbeat)){
-          playCrash(nextNoteTime,0.5);
-          crashOnNextDownbeat=false;
-        }
+        // Паттерны и визуал планируем с обновленным autoBarCounter
+        if(currentBeat === 0) scheduleDrums(nextNoteTime);
+        scheduleVisual(currentBeat, nextNoteTime);
         nextNote();
       }
       timerID = setTimeout(scheduler, lookahead);
@@ -467,10 +415,10 @@ window.addEventListener('DOMContentLoaded',()=>{
             await countdown();
         }
         if(isRunning) return;
-        isRunning=true; autoBarCounter=0; autoDir=1; lastBeatIndex=null; autoElapsedSec=0; autoElapsedSecApprox=0; autoLastUIStamp=performance.now(); barsSinceStart=0; patternAlt=0; crashOnNextDownbeat=false; const cfg=autoCfg(); if(cfg.enabled && (bpm()<cfg.minV || bpm()>cfg.maxV)) applyBpm(cfg.minV); runToken++; clearVisuals(); renderBar(); currentBeat=0; nextNoteTime = audioCtx.currentTime; scheduler(); startBtn.disabled=true; stopBtn.disabled=false; startUITimer(); updateAutoUI(); updateBarsCounterUI();
+        isRunning=true; autoBarCounter=0; autoDir=1; lastBeatIndex=null; autoElapsedSec=0; autoElapsedSecApprox=0; autoLastUIStamp=performance.now(); barsSinceStart=0; patternAlt=0; currentBar=1; crashOnNextDownbeat=false; const cfg=autoCfg(); if(cfg.enabled && (bpm()<cfg.minV || bpm()>cfg.maxV)) applyBpm(cfg.minV); runToken++; clearVisuals(); renderBar(); currentBeat=0; nextNoteTime = audioCtx.currentTime; if(audioCtx && drumGain) drumGain.gain.setValueAtTime(Number(drumsVol.value), audioCtx.currentTime); scheduler(); startBtn.disabled=true; stopBtn.disabled=false; startUITimer(); updateAutoUI(); updateBarsCounterUI();
         totalTimerID = setInterval(() => { totalTime++; updateTotalTime(); }, 1000);
     }
-    function stop(){ if(!isRunning) return; isRunning=false; if(timerID){clearTimeout(timerID); timerID=null;} startBtn.disabled=false; stopBtn.disabled=true; currentBeat=0; runToken++; clearVisuals(); stopUITimer(); nextStepTimer.textContent='—:—'; nextStepTimer.style.visibility='hidden'; if(totalTimerID){ clearInterval(totalTimerID); totalTimerID=null; } }
+    function stop(){ if(!isRunning) return; isRunning=false; if(timerID){clearTimeout(timerID); timerID=null;} startBtn.disabled=false; stopBtn.disabled=true; currentBeat=0; currentBar=1; runToken++; clearVisuals(); stopUITimer(); nextStepTimer.textContent='—:—'; nextStepTimer.style.visibility='hidden'; if(totalTimerID){ clearInterval(totalTimerID); totalTimerID=null; } if(audioCtx && drumGain && audioCtx.currentTime) drumGain.gain.setValueAtTime(0, audioCtx.currentTime); }
 
     // Привязки UI
     bpmRange.addEventListener('input',e=>{ bpmInput.value=e.target.value; });
