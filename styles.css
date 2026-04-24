@@ -414,21 +414,86 @@ select {
 
 /* Responsive */
 @media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
   .container {
     padding: 12px;
+    border-radius: 10px;
   }
 
   header {
     flex-direction: column;
     gap: 8px;
+    align-items: flex-start;
+  }
+
+  header h1 {
+    display: none;
+  }
+
+  #totalTime {
+    align-self: flex-end;
   }
 
   .controls {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
-  .options,
-  .auto-controls {
+  .control.bpm .input-group {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .control.bpm input[type="number"] {
+    width: 74px;
+    flex: 0 0 auto;
+  }
+
+  .control.buttons {
+    grid-column: 1 / -1;
+  }
+
+  .tabs {
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .tab {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 8px;
+    font-size: 15px;
+  }
+
+  .control label,
+  .input-row label {
+    font-size: 11px;
+  }
+
+  .input-group {
+    gap: 6px;
+  }
+
+  input[type="number"],
+  input[type="range"],
+  select,
+  .btn {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .control.buttons {
+    gap: 10px;
+  }
+
+  .control.buttons .btn {
+    width: 100%;
+  }
+
+  .options {
     flex-direction: column;
     align-items: stretch;
   }
@@ -436,15 +501,51 @@ select {
   .option.volume {
     margin-left: 0;
     flex-direction: column;
+    align-items: stretch;
+    width: 100%;
   }
 
   .auto-inputs {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auto-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .auto-controls .toggle {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 2px;
+  }
+
+  .auto-controls .btn.small {
+    margin-left: auto;
+    min-height: 40px;
+  }
+
+  .input-row input,
+  .input-row select {
+    width: 100%;
   }
 
   .visualizer {
     flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
     gap: 12px;
+    padding: 12px;
+  }
+
+  .progress {
+    width: 100%;
+  }
+
+  .track {
+    height: 30px;
   }
 
   .timer {
