@@ -1,0 +1,21 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "pkill": true,
+        "/^cd /Users/mihaildubovov/Desktop/Metronom && python3 -m http\\.server 8082$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd /Users/mihaildubovov/Desktop/Metronom && python3 -m http\\.server 8083$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd /Users/mihaildubovov/Desktop/Metronom && python3 -m http\\.server 8084$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python3 -m http\\.server 8000$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
