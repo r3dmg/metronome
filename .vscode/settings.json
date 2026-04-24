@@ -17,6 +17,8 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "git add": true
+        "git add": true,
+        "git push": true,
+        "git commit": true
     }
 }
