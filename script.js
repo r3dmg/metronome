@@ -303,7 +303,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     const DRUMS_PATTERN={
       4:{
         4:{
-          closed_hithat:{ inbetween:[[1,5,9,13],[1,5,9,13]], volume:0.4, duration:0.08 },
+          closed_hithat:{ inbetween:[[1,5,9,13],[1,5,9,13]], volume:0.3, duration:0.08 },
           open_hihat:{ inbetween:[[],[]], volume:0.2, duration:0.4 },
           crash_cymbal:{ first_bar:[1], volume:0.5, duration:0.7 },
           kick:{ inbetween:[[1,9,11]], volume:0.95, duration:0.12 },
