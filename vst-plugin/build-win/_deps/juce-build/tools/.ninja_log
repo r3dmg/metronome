@@ -1,0 +1,13 @@
+# ninja log v7
+1	30	1780513800913731247	/Users/mihaildubovov/Documents/Projects/metronome/vst-plugin/build-win/_deps/juce-build/tools/CMakeFiles/cmake.verify_globs	44f3963a0381cecf
+33	69	1780513800945436478	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_core/juce_core_CompilationTime.cpp.o	3190af18be7a31c2
+31	206	1780513800944202688	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_graphics/juce_graphics_Sheenbidi.c.o	c1076d6d059e9dd2
+35	1515	1780513800947294432	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_data_structures/juce_data_structures.mm.o	7339432b0b362eb1
+30	1896	1780513800942720775	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/juce_build_tools/juce_build_tools.cpp.o	51b1d1e185b37a47
+30	1955	1780513800942431900	extras/Build/juceaide/CMakeFiles/juceaide.dir/Main.cpp.o	fabf00b79696923f
+33	2099	1780513800945113103	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_events/juce_events.mm.o	6eb8a6771315c70b
+34	3413	1780513800946170393	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_core/juce_core.mm.o	c5e570c1068d4492
+32	5307	1780513800944520063	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_graphics/juce_graphics.mm.o	67bb766d38d5ab01
+31	5435	1780513800943453356	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o	5e6c8e5e86da51e7
+31	9752	1780513800943156149	extras/Build/juceaide/CMakeFiles/juceaide.dir/__/__/__/modules/juce_gui_basics/juce_gui_basics.mm.o	6b82346af73729e3
+9752	9909	1780513810665029572	extras/Build/juceaide/juceaide_artefacts/Debug/juceaide	55bc861f793dbba4

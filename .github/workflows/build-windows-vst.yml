@@ -1,0 +1,34 @@
+name: Build Windows VST3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'vst-plugin/**'
+      - '.github/workflows/build-windows-vst.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        working-directory: vst-plugin
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        working-directory: vst-plugin
+        run: cmake --build build --config Release
+
+      - name: Zip VST3
+        working-directory: vst-plugin/build/MetronomeVST_artefacts/Release/VST3
+        run: |
+          powershell Compress-Archive -Path Metronome.vst3 -DestinationPath ${{ github.workspace }}/Metronome-Windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Metronome-Windows-VST3
+          path: Metronome-Windows-x64.zip
+          retention-days: 90

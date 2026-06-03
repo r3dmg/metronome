@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/mihaildubovov/Documents/Projects/metronome/vst-plugin/build-win/_deps/juce-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
