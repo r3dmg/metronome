@@ -1,13 +1,14 @@
 # Metronome — установка на Windows (FL Studio)
 
-## Скачать готовый плагин
+## Скачать готовый плагин (проще всего)
 
-1. Откройте: **https://github.com/r3dmg/metronome/actions/workflows/build-windows-vst.yml**
-2. Выберите последний успешный запуск (зелёная галочка).
-3. Внизу страницы в **Artifacts** скачайте **Metronome-Windows-VST3** (файл `Metronome-Windows-x64.zip`).
-4. Распакуйте архив — внутри папка **`Metronome.vst3`**.
+**Прямая ссылка (после сборки на GitHub):**
 
-Если сборки ещё нет: нажмите **Run workflow** → **Run workflow**, подождите ~5–10 минут и обновите страницу.
+https://github.com/r3dmg/metronome/releases/download/metronome-windows/Metronome-Windows-x64.zip
+
+Распакуйте архив — внутри папка **`Metronome.vst3`**.
+
+Альтернатива: [Actions](https://github.com/r3dmg/metronome/actions/workflows/build-windows-vst.yml) → последний зелёный запуск → **Artifacts** → `Metronome-Windows-VST3`.
 
 ## Установка
 

@@ -1,4 +1,6 @@
 build/
+build-win/
+dist/
 cmake-build-*/
 *.vst3
 *.component
