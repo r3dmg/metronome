@@ -34,12 +34,13 @@ jobs:
           retention-days: 90
 
       - name: Publish to GitHub Releases (public download)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release view metronome-windows --repo ${{ github.repository }} 2>/dev/null \
-            || gh release create metronome-windows \
-                 --repo ${{ github.repository }} \
-                 --title "Metronome — Windows VST3" \
-                 --notes "Распакуйте zip и скопируйте папку Metronome.vst3 в C:\Program Files\Common Files\VST3\ затем Refresh в FL Studio."
-          gh release upload metronome-windows Metronome-Windows-x64.zip --repo ${{ github.repository }} --clobber
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: metronome-windows
+          name: Metronome — Windows VST3
+          body: |
+            Распакуйте zip и скопируйте папку **Metronome.vst3** в
+            `C:\Program Files\Common Files\VST3\`, затем Refresh в FL Studio.
+          files: Metronome-Windows-x64.zip
+          overwrite_files: true
+          make_latest: true
