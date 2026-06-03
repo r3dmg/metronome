@@ -35,16 +35,22 @@ public:
     void reset();
     void setParams (const Params& p);
 
+    void start();
+    void stop();
+    void resetAutoState();
+    bool isRunning() const { return internalPlaying; }
+
     float process (juce::AudioBuffer<float>& buffer,
                    int numSamples,
-                   bool hostIsPlaying,
-                   double hostBpm,
-                   int64_t hostPpqPosition);
+                   double hostBpm);
 
     float getCurrentBpm() const { return currentBpm; }
     int getCurrentBeat() const { return currentBeat; }
     int getCurrentBar() const { return currentBar; }
     Phase getPhase() const { return phase; }
+    float getBeatProgress() const;
+    int getTotalTimeSec() const { return totalTimeSec; }
+    juce::String getStatusTimerText() const;
     /** 0 = no overlay; 3,2,1 during countdown. */
     int getCountdownDisplay() const;
 
@@ -110,7 +116,9 @@ private:
 
     double samplesPerBeat = 0.0;
     double sampleCounter = 0.0;
-    bool hostWasPlaying = false;
+    bool internalPlaying = false;
+    int totalTimeSec = 0;
+    double totalTimeSamples = 0.0;
 
     static constexpr int kMaxSampleVoices = 24;
     static constexpr int kMaxClickVoices = 8;

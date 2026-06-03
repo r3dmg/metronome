@@ -119,25 +119,13 @@ void MetronomeVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     syncEngineFromParams();
 
-    bool playing = false;
-    if (auto* ph = getPlayHead())
-        if (auto pos = ph->getPosition())
-            playing = pos->getIsPlaying();
-
     double hostBpm = 120.0;
-    int64_t ppq = 0;
     if (auto* ph = getPlayHead())
-    {
         if (auto pos = ph->getPosition())
-        {
             if (pos->getBpm().hasValue())
                 hostBpm = *pos->getBpm();
-            if (pos->getPpqPosition().hasValue())
-                ppq = (int64_t) *pos->getPpqPosition();
-        }
-    }
 
-    engine.process (buffer, buffer.getNumSamples(), playing, hostBpm, ppq);
+    engine.process (buffer, buffer.getNumSamples(), hostBpm);
 }
 
 juce::AudioProcessorEditor* MetronomeVSTAudioProcessor::createEditor()

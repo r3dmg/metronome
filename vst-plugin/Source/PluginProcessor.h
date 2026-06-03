@@ -36,6 +36,10 @@ public:
 
     MetronomeEngine& getEngine() { return engine; }
 
+    void startMetronome() { engine.start(); }
+    void stopMetronome()  { engine.stop(); }
+    bool isMetronomeRunning() const { return engine.isRunning(); }
+
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:

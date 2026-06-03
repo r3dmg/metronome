@@ -60,6 +60,7 @@ target_sources(MetronomeVST
         Source/MetronomeEngine.cpp
         Source/SampleBank.cpp
         Source/BeatVisualizer.h
+        Source/MetronomeTheme.h
 )
 
 target_compile_definitions(MetronomeVST

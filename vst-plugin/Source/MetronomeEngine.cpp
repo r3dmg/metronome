@@ -70,7 +70,9 @@ void MetronomeEngine::reset()
     lastBeatIndex = -1;
     crashOnNextDownbeat = false;
     sampleCounter = 0.0;
-    hostWasPlaying = false;
+    internalPlaying = false;
+    totalTimeSec = 0;
+    totalTimeSamples = 0.0;
     scheduled.clear();
     for (auto& v : sampleVoices)
         v.active = false;
@@ -83,6 +85,58 @@ void MetronomeEngine::reset()
 void MetronomeEngine::setParams (const Params& p)
 {
     params = p;
+}
+
+void MetronomeEngine::start()
+{
+    if (internalPlaying)
+        return;
+    internalPlaying = true;
+    beginCountdownOrRunning();
+}
+
+void MetronomeEngine::stop()
+{
+    internalPlaying = false;
+    reset();
+}
+
+void MetronomeEngine::resetAutoState()
+{
+    autoBarCounter = 0;
+    autoDir = 1;
+    autoElapsedSec = 0.0;
+    lastBeatIndex = -1;
+    crashOnNextDownbeat = false;
+    const float minV = juce::jmin (params.autoMin, params.autoMax);
+    currentBpm = juce::jlimit (20.0f, 300.0f, minV);
+    updateSamplesPerBeat();
+}
+
+float MetronomeEngine::getBeatProgress() const
+{
+    if (samplesPerBeat <= 0.0)
+        return 0.0f;
+    return (float) juce::jlimit (0.0, 1.0, sampleCounter / samplesPerBeat);
+}
+
+juce::String MetronomeEngine::getStatusTimerText() const
+{
+    if (! params.autoBpmEnabled)
+        return "---";
+
+    if (params.autoUnitBars)
+    {
+        const int total = juce::jmax (1, params.autoEvery);
+        const int cur = juce::jmin (total, autoBarCounter + 1);
+        return juce::String (cur) + "/" + juce::String (total);
+    }
+
+    const double need = (double) params.autoEvery * 60.0;
+    const double remain = juce::jmax (0.0, need - autoElapsedSec);
+    const int m = (int) (remain / 60.0);
+    const int s = (int) std::fmod (remain, 60.0);
+    return juce::String (m) + ":" + juce::String (s).paddedLeft ('0', 2);
 }
 
 void MetronomeEngine::updateSamplesPerBeat()
@@ -488,20 +542,12 @@ void MetronomeEngine::processRunning (int numSamples)
 
 float MetronomeEngine::process (juce::AudioBuffer<float>& buffer,
                                 int numSamples,
-                                bool hostIsPlaying,
-                                double hostBpm,
-                                int64_t hostPpqPosition)
+                                double hostBpm)
 {
-    juce::ignoreUnused (hostPpqPosition);
     buffer.clear();
 
-    if (! hostIsPlaying)
-    {
-        if (hostWasPlaying)
-            reset();
-        hostWasPlaying = false;
+    if (! internalPlaying)
         return currentBpm;
-    }
 
     if (params.useHostTempo && hostBpm > 20.0 && hostBpm < 300.0)
         currentBpm = (float) hostBpm;
@@ -510,10 +556,11 @@ float MetronomeEngine::process (juce::AudioBuffer<float>& buffer,
 
     updateSamplesPerBeat();
 
-    if (! hostWasPlaying)
+    totalTimeSamples += (double) numSamples;
+    while (totalTimeSamples >= sampleRate)
     {
-        hostWasPlaying = true;
-        beginCountdownOrRunning();
+        totalTimeSamples -= sampleRate;
+        ++totalTimeSec;
     }
 
     const int64_t blockEnd = transportSamples + numSamples;
