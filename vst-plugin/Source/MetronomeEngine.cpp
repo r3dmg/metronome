@@ -252,8 +252,9 @@ void MetronomeEngine::renderAudio (float* left, float* right, int numSamples)
             if (! v.active)
                 continue;
 
-            const bool high = v.freq > 1200.0;
-            const float out = high && (v.phase < 0.002 * sampleRate) ? 1.0f : 0.0f;
+            // ФИКС 1: убрано условие `high &&` — теперь оба вида клика (акцент и обычный)
+            // генерируют звук. Ранее неакцентированные биты (freq <= 1200) всегда давали out=0.
+            const float out = (v.phase < 0.002 * sampleRate) ? 1.0f : 0.0f;
             s += out * (float) v.env * v.gain;
             v.phase += 1.0;
             v.env -= v.decay;
@@ -345,6 +346,11 @@ void MetronomeEngine::startRunningFromDownbeat()
     phase = Phase::running;
     scheduleClick (transportSamples, true);
     onDownbeat();
+
+    // ФИКС 2: бит 0 (даунбит) уже отыгран выше — выставляем currentBeat=1,
+    // чтобы processRunning не вызвал onDownbeat() повторно через samplesPerBeat,
+    // что приводило к дублированию клика и барабанов первого бара.
+    currentBeat = 1;
 }
 
 void MetronomeEngine::bumpBpm()
