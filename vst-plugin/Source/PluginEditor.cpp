@@ -150,17 +150,18 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
             apvts.getParameterRange (ParamIDs::bpm).convertTo0to1 (minV));
     };
 
-    // Подписи Auto-BPM полей
-    for (auto [lbl, txt] : { std::pair<juce::Label*, const char*> { &autoMinLabel,   "MIN BPM" },
-                                                                    { &autoMaxLabel,   "MAX BPM" },
-                                                                    { &autoStepLabel,  "STEP"    },
-                                                                    { &autoEveryLabel, "EVERY"   } })
+    // Подписи Auto-BPM полей (явно, без initializer_list — совместимо с MSVC)
+    auto styleAutoLabel = [this] (juce::Label& lbl, const juce::String& txt)
     {
-        lbl->setText (txt, juce::dontSendNotification);
-        lbl->setFont (juce::FontOptions (10.0f).withStyle ("Bold"));
-        lbl->setColour (juce::Label::textColourId, MetronomeTheme::subtext);
-        autoPanel.addAndMakeVisible (*lbl);
-    }
+        lbl.setText (txt, juce::dontSendNotification);
+        lbl.setFont (juce::FontOptions (10.0f).withStyle ("Bold"));
+        lbl.setColour (juce::Label::textColourId, MetronomeTheme::subtext);
+        autoPanel.addAndMakeVisible (lbl);
+    };
+    styleAutoLabel (autoMinLabel,   "MIN BPM");
+    styleAutoLabel (autoMaxLabel,   "MAX BPM");
+    styleAutoLabel (autoStepLabel,  "STEP");
+    styleAutoLabel (autoEveryLabel, "EVERY");
 
     for (auto* s : { &autoMinSlider, &autoMaxSlider, &autoStepSlider, &autoEverySlider })
     {
@@ -375,11 +376,15 @@ void MetronomeVSTAudioProcessorEditor::updateAutoPanelEnabled()
 {
     const bool en = autoBpmToggle.getToggleState();
     autoPanel.setAlpha (en ? 1.0f : 0.5f);
-    for (auto* c : { (juce::Component*) &autoMinSlider, &autoMaxSlider,
-                                        &autoStepSlider, &autoEverySlider,
-                                        &autoLoopToggle, &autoReverseToggle,
-                                        &autoResetBtn,   &autoUnitBox })
-        c->setEnabled (en);
+    // Явное перечисление — MSVC не выводит тип из смешанного initializer_list
+    autoMinSlider   .setEnabled (en);
+    autoMaxSlider   .setEnabled (en);
+    autoStepSlider  .setEnabled (en);
+    autoEverySlider .setEnabled (en);
+    autoLoopToggle  .setEnabled (en);
+    autoReverseToggle.setEnabled (en);
+    autoResetBtn    .setEnabled (en);
+    autoUnitBox     .setEnabled (en);
 }
 
 void MetronomeVSTAudioProcessorEditor::timerCallback()
