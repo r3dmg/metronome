@@ -6,14 +6,6 @@ namespace
 void styleHeaderLabel (juce::Label& l, const juce::String& text)
 {
     l.setText (text, juce::dontSendNotification);
-    l.setFont (juce::FontOptions (12.0f).withStyle ("Bold"));
-    l.setColour (juce::Label::textColourId, MetronomeTheme::subtext);
-    l.setJustificationType (juce::Justification::centredLeft);
-}
-
-void styleFieldLabel (juce::Label& l, const juce::String& text)
-{
-    l.setText (text, juce::dontSendNotification);
     l.setFont (juce::FontOptions (11.0f).withStyle ("Bold"));
     l.setColour (juce::Label::textColourId, MetronomeTheme::subtext);
     l.setJustificationType (juce::Justification::centredLeft);
@@ -25,23 +17,25 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
       audioProcessor (p)
 {
     setLookAndFeel (&laf);
-    setSize (500, 680);
+    setSize (500, 730);
     setWantsKeyboardFocus (true);
 
     auto& apvts = audioProcessor.getAPVTS();
     activeProfile = audioProcessor.getCurrentProgram();
 
+    // --- Заголовок ---
     titleLabel.setText ("Metronome", juce::dontSendNotification);
-    titleLabel.setFont (juce::FontOptions (24.0f));
+    titleLabel.setFont (juce::FontOptions (22.0f).withStyle ("Bold"));
     titleLabel.setColour (juce::Label::textColourId, MetronomeTheme::text);
     addAndMakeVisible (titleLabel);
 
-    totalTimeLabel.setText ("Total Time: 00:00", juce::dontSendNotification);
-    totalTimeLabel.setFont (juce::FontOptions (14.0f));
+    totalTimeLabel.setText ("00:00", juce::dontSendNotification);
+    totalTimeLabel.setFont (juce::FontOptions (13.0f));
     totalTimeLabel.setColour (juce::Label::textColourId, MetronomeTheme::subtext);
     totalTimeLabel.setJustificationType (juce::Justification::centredRight);
     addAndMakeVisible (totalTimeLabel);
 
+    // --- Вкладки профилей ---
     for (int i = 0; i < 5; ++i)
     {
         profileTabs[i].setButtonText (juce::String (i + 1));
@@ -56,16 +50,18 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
     }
     updateProfileTabs();
 
+    // --- BPM ---
     styleHeaderLabel (bpmHeader, "BPM");
     addAndMakeVisible (bpmHeader);
     bpmSlider.setSliderStyle (juce::Slider::LinearHorizontal);
-    bpmSlider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 72, 22);
+    bpmSlider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 80, 24);
     bpmSlider.setColour (juce::Slider::textBoxTextColourId, MetronomeTheme::text);
     bpmSlider.setColour (juce::Slider::textBoxBackgroundColourId, MetronomeTheme::inset);
     bpmSlider.setColour (juce::Slider::textBoxOutlineColourId, MetronomeTheme::border);
     addAndMakeVisible (bpmSlider);
     bpmAttach = std::make_unique<Attachment> (apvts, ParamIDs::bpm, bpmSlider);
 
+    // --- Размер такта ---
     styleHeaderLabel (timeSigHeader, "TIME SIGNATURE");
     addAndMakeVisible (timeSigHeader);
     for (int i = 1; i <= 12; ++i)
@@ -75,7 +71,7 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
     beatsAttach = std::make_unique<ComboAttachment> (apvts, ParamIDs::beatsPerBar, beatsBox);
 
     slashLabel.setText ("/", juce::dontSendNotification);
-    slashLabel.setFont (juce::FontOptions (14.0f).withStyle ("Bold"));
+    slashLabel.setFont (juce::FontOptions (16.0f).withStyle ("Bold"));
     slashLabel.setColour (juce::Label::textColourId, MetronomeTheme::subtext);
     slashLabel.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (slashLabel);
@@ -85,6 +81,7 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
     addAndMakeVisible (unitBox);
     unitAttach = std::make_unique<ComboAttachment> (apvts, ParamIDs::beatUnit, unitBox);
 
+    // --- Кнопки Start / Stop ---
     startBtn.setButtonText ("Start");
     startBtn.getProperties().set ("btnStyle", "primary");
     startBtn.onClick = [this]() { audioProcessor.startMetronome(); updateStartStopButtons(); };
@@ -96,34 +93,38 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
     stopBtn.onClick = [this]() { audioProcessor.stopMetronome(); updateStartStopButtons(); };
     addAndMakeVisible (stopBtn);
 
+    // --- Визуализатор ---
     addAndMakeVisible (beatVisualizer);
     nextStepTimer.setText ("---", juce::dontSendNotification);
-    nextStepTimer.setFont (juce::FontOptions (16.0f).withStyle ("Bold"));
+    nextStepTimer.setFont (juce::FontOptions (14.0f).withStyle ("Bold"));
     nextStepTimer.setColour (juce::Label::textColourId, MetronomeTheme::subtext);
     nextStepTimer.setJustificationType (juce::Justification::centredRight);
     addAndMakeVisible (nextStepTimer);
 
+    // --- Опции ---
     countToggle.setButtonText ("Countdown");
     drumsToggle.setButtonText ("Drums");
     hostTempoToggle.setButtonText ("Sync host BPM");
     addAndMakeVisible (countToggle);
     addAndMakeVisible (drumsToggle);
     addAndMakeVisible (hostTempoToggle);
-    countAttach = std::make_unique<ButtonAttachment> (apvts, ParamIDs::countdown, countToggle);
-    drumsAttach = std::make_unique<ButtonAttachment> (apvts, ParamIDs::drums, drumsToggle);
-    hostTempoAttach = std::make_unique<ButtonAttachment> (apvts, ParamIDs::useHostTempo, hostTempoToggle);
+    countAttach    = std::make_unique<ButtonAttachment> (apvts, ParamIDs::countdown,    countToggle);
+    drumsAttach    = std::make_unique<ButtonAttachment> (apvts, ParamIDs::drums,        drumsToggle);
+    hostTempoAttach= std::make_unique<ButtonAttachment> (apvts, ParamIDs::useHostTempo, hostTempoToggle);
 
     drumsVolLabel.setText ("Volume", juce::dontSendNotification);
-    drumsVolLabel.setColour (juce::Label::textColourId, MetronomeTheme::text);
+    drumsVolLabel.setFont (juce::FontOptions (13.0f));
+    drumsVolLabel.setColour (juce::Label::textColourId, MetronomeTheme::subtext);
     addAndMakeVisible (drumsVolLabel);
     drumsVolSlider.setSliderStyle (juce::Slider::LinearHorizontal);
     drumsVolSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     addAndMakeVisible (drumsVolSlider);
     drumsVolAttach = std::make_unique<Attachment> (apvts, ParamIDs::drumsVol, drumsVolSlider);
 
+    // --- Auto-BPM ---
     addAndMakeVisible (autoPanel);
     autoHeader.setText ("Auto-BPM", juce::dontSendNotification);
-    autoHeader.setFont (juce::FontOptions (16.0f));
+    autoHeader.setFont (juce::FontOptions (15.0f).withStyle ("Bold"));
     autoHeader.setColour (juce::Label::textColourId, MetronomeTheme::accent);
     autoPanel.addAndMakeVisible (autoHeader);
 
@@ -139,7 +140,7 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
     autoPanel.addAndMakeVisible (autoLoopToggle);
     autoPanel.addAndMakeVisible (autoReverseToggle);
     autoPanel.addAndMakeVisible (autoResetBtn);
-    autoLoopAttach = std::make_unique<ButtonAttachment> (apvts, ParamIDs::autoLoop, autoLoopToggle);
+    autoLoopAttach    = std::make_unique<ButtonAttachment> (apvts, ParamIDs::autoLoop,    autoLoopToggle);
     autoReverseAttach = std::make_unique<ButtonAttachment> (apvts, ParamIDs::autoReverse, autoReverseToggle);
     autoResetBtn.onClick = [this, &apvts]()
     {
@@ -149,28 +150,33 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
             apvts.getParameterRange (ParamIDs::bpm).convertTo0to1 (minV));
     };
 
-    styleFieldLabel (autoMinLabel, "MIN BPM");
-    styleFieldLabel (autoMaxLabel, "MAX BPM");
-    styleFieldLabel (autoStepLabel, "STEP");
-    styleFieldLabel (autoEveryLabel, "EVERY");
-    for (auto* l : { &autoMinLabel, &autoMaxLabel, &autoStepLabel, &autoEveryLabel })
-        autoPanel.addAndMakeVisible (*l);
+    // Подписи Auto-BPM полей
+    for (auto [lbl, txt] : { std::pair<juce::Label*, const char*> { &autoMinLabel,   "MIN BPM" },
+                                                                    { &autoMaxLabel,   "MAX BPM" },
+                                                                    { &autoStepLabel,  "STEP"    },
+                                                                    { &autoEveryLabel, "EVERY"   } })
+    {
+        lbl->setText (txt, juce::dontSendNotification);
+        lbl->setFont (juce::FontOptions (10.0f).withStyle ("Bold"));
+        lbl->setColour (juce::Label::textColourId, MetronomeTheme::subtext);
+        autoPanel.addAndMakeVisible (*lbl);
+    }
 
     for (auto* s : { &autoMinSlider, &autoMaxSlider, &autoStepSlider, &autoEverySlider })
     {
         s->setSliderStyle (juce::Slider::LinearHorizontal);
-        s->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 64, 18);
+        s->setTextBoxStyle (juce::Slider::TextBoxBelow, false, 60, 18);
         s->setColour (juce::Slider::textBoxTextColourId, MetronomeTheme::text);
         s->setColour (juce::Slider::textBoxBackgroundColourId, MetronomeTheme::inset);
         s->setColour (juce::Slider::textBoxOutlineColourId, MetronomeTheme::border);
         autoPanel.addAndMakeVisible (*s);
     }
-    autoMinAttach = std::make_unique<Attachment> (apvts, ParamIDs::autoMin, autoMinSlider);
-    autoMaxAttach = std::make_unique<Attachment> (apvts, ParamIDs::autoMax, autoMaxSlider);
-    autoStepAttach = std::make_unique<Attachment> (apvts, ParamIDs::autoStep, autoStepSlider);
+    autoMinAttach   = std::make_unique<Attachment> (apvts, ParamIDs::autoMin,   autoMinSlider);
+    autoMaxAttach   = std::make_unique<Attachment> (apvts, ParamIDs::autoMax,   autoMaxSlider);
+    autoStepAttach  = std::make_unique<Attachment> (apvts, ParamIDs::autoStep,  autoStepSlider);
     autoEveryAttach = std::make_unique<Attachment> (apvts, ParamIDs::autoEvery, autoEverySlider);
 
-    autoUnitBox.addItem ("Bars", 1);
+    autoUnitBox.addItem ("Bars",    1);
     autoUnitBox.addItem ("Minutes", 2);
     autoUnitBox.onChange = [this, &apvts]()
     {
@@ -178,10 +184,7 @@ MetronomeVSTAudioProcessorEditor::MetronomeVSTAudioProcessorEditor (MetronomeVST
         apvts.getParameter (ParamIDs::autoUnitBars)->setValueNotifyingHost (bars ? 1.0f : 0.0f);
     };
     autoPanel.addAndMakeVisible (autoUnitBox);
-    if (*apvts.getRawParameterValue (ParamIDs::autoUnitBars) > 0.5f)
-        autoUnitBox.setSelectedId (1);
-    else
-        autoUnitBox.setSelectedId (2);
+    autoUnitBox.setSelectedId (*apvts.getRawParameterValue (ParamIDs::autoUnitBars) > 0.5f ? 1 : 2);
 
     updateAutoPanelEnabled();
     startTimerHz (30);
@@ -194,33 +197,39 @@ MetronomeVSTAudioProcessorEditor::~MetronomeVSTAudioProcessorEditor()
 
 void MetronomeVSTAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    // Фон окна
     g.fillAll (MetronomeTheme::bg);
 
-    auto bounds = getLocalBounds().reduced (12);
+    // Основная карточка (как .container в веб-приложении)
+    auto card = getLocalBounds().reduced (10);
     g.setColour (MetronomeTheme::panel);
-    g.fillRoundedRectangle (bounds.toFloat(), 12.0f);
+    g.fillRoundedRectangle (card.toFloat(), 12.0f);
 
-    auto drawPanel = [&g] (juce::Rectangle<int> r)
+    // Линия под вкладками (как border-bottom у .tabs)
+    g.setColour (MetronomeTheme::border);
+    g.drawHorizontalLine (tabsBottom,
+                          (float) card.getX() + 10,
+                          (float) card.getRight() - 10);
+
+    // Секции с тёмным инсетом (visualizer, options, auto-bpm)
+    auto drawSection = [&g] (juce::Rectangle<int> r)
     {
-        if (r.isEmpty())
-            return;
+        if (r.isEmpty()) return;
         g.setColour (MetronomeTheme::inset);
         g.fillRoundedRectangle (r.toFloat(), 10.0f);
         g.setColour (MetronomeTheme::border);
         g.drawRoundedRectangle (r.toFloat().reduced (0.5f), 10.0f, 1.0f);
     };
 
-    drawPanel (vizBounds);
-    drawPanel (optionsBounds);
-    drawPanel (autoBounds);
+    drawSection (vizBounds);
+    drawSection (optionsBounds);
+    drawSection (autoBounds);
 
-    g.setColour (MetronomeTheme::border);
-    g.drawHorizontalLine (tabsBottom, (float) bounds.getX() + 12, (float) bounds.getRight() - 12);
-
+    // Оверлей отсчёта
     const int cd = audioProcessor.getEngine().getCountdownDisplay();
     if (cd > 0)
     {
-        g.setColour (juce::Colour (0xcc000000));
+        g.setColour (juce::Colour (0xdd0f172a));
         g.fillRect (getLocalBounds());
         g.setColour (MetronomeTheme::accent);
         g.setFont (juce::FontOptions (120.0f).withStyle ("Bold"));
@@ -230,56 +239,72 @@ void MetronomeVSTAudioProcessorEditor::paint (juce::Graphics& g)
 
 void MetronomeVSTAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds().reduced (24);
+    const int pad = 20;
+    auto area = getLocalBounds().reduced (pad);
 
-    auto header = area.removeFromTop (32);
-    titleLabel.setBounds (header.removeFromLeft (header.getWidth() / 2));
+    // ----- Header -----
+    auto header = area.removeFromTop (28);
+    titleLabel.setBounds (header.removeFromLeft (200));
     totalTimeLabel.setBounds (header);
 
-    auto tabs = area.removeFromTop (36);
-    tabsBottom = tabs.getBottom();
-    const int tw = tabs.getWidth() / 5;
-    for (int i = 0; i < 5; ++i)
-        profileTabs[i].setBounds (tabs.removeFromLeft (tw).reduced (2, 6));
+    area.removeFromTop (12);
 
-    area.removeFromTop (8);
-    auto controls = area.removeFromTop (168);
+    // ----- Вкладки -----
+    auto tabRow = area.removeFromTop (36);
+    tabsBottom = tabRow.getBottom() + 4;
+    const int tw = tabRow.getWidth() / 5;
+    for (int i = 0; i < 5; ++i)
+        profileTabs[i].setBounds (tabRow.removeFromLeft (tw).reduced (2, 5));
+
+    area.removeFromTop (14);
+
+    // ----- Блок управления: 3 колонки -----
+    auto controls = area.removeFromTop (130);
     const int colW = controls.getWidth() / 3;
 
+    // Колонка 1: BPM (label + slider с TextBoxAbove)
     auto bpmCol = controls.removeFromLeft (colW).reduced (4, 0);
-    bpmHeader.setBounds (bpmCol.removeFromTop (18));
+    bpmHeader.setBounds (bpmCol.removeFromTop (16));
     bpmSlider.setBounds (bpmCol);
 
+    // Колонка 2: Размер такта (label + два комбобокса)
     auto sigCol = controls.removeFromLeft (colW).reduced (4, 0);
-    timeSigHeader.setBounds (sigCol.removeFromTop (18));
-    auto sigRow = sigCol.removeFromTop (36);
-    beatsBox.setBounds (sigRow.removeFromLeft (sigRow.getWidth() / 2 - 12));
-    slashLabel.setBounds (sigRow.removeFromLeft (24));
+    timeSigHeader.setBounds (sigCol.removeFromTop (16));
+    auto sigRow = sigCol.removeFromTop (34);
+    const int halfW = (sigRow.getWidth() - 20) / 2;
+    beatsBox.setBounds (sigRow.removeFromLeft (halfW));
+    slashLabel.setBounds (sigRow.removeFromLeft (20));
     unitBox.setBounds (sigRow);
 
+    // Колонка 3: Кнопки Start / Stop
     auto btnCol = controls.reduced (4, 0);
-    btnCol.removeFromTop (18);
-    auto btnRow = btnCol.removeFromTop (88);
-    startBtn.setBounds (btnRow.removeFromTop (40).reduced (0, 2));
-    stopBtn.setBounds (btnRow.reduced (0, 2));
+    btnCol.removeFromTop (16);
+    startBtn.setBounds (btnCol.removeFromTop (44).reduced (0, 2));
+    stopBtn.setBounds  (btnCol.removeFromTop (44).reduced (0, 2));
 
-    area.removeFromTop (8);
-    vizBounds = area.removeFromTop (72).reduced (0, 4);
-    auto vizInner = vizBounds.reduced (14, 12);
-    nextStepTimer.setBounds (vizInner.removeFromRight (90));
+    area.removeFromTop (12);
+
+    // ----- Визуализатор -----
+    vizBounds = area.removeFromTop (60).reduced (0, 2);
+    auto vizInner = vizBounds.reduced (12, 10);
+    nextStepTimer.setBounds (vizInner.removeFromRight (80));
     beatVisualizer.setBounds (vizInner);
 
-    area.removeFromTop (8);
-    optionsBounds = area.removeFromTop (52).reduced (0, 4);
-    auto opt = optionsBounds.reduced (12, 10);
-    countToggle.setBounds (opt.removeFromLeft (108));
-    drumsToggle.setBounds (opt.removeFromLeft (80));
-    hostTempoToggle.setBounds (opt.removeFromLeft (120));
-    drumsVolLabel.setBounds (opt.removeFromLeft (52));
+    area.removeFromTop (10);
+
+    // ----- Опции -----
+    optionsBounds = area.removeFromTop (46).reduced (0, 2);
+    auto opt = optionsBounds.reduced (12, 8);
+    countToggle.setBounds    (opt.removeFromLeft (110));
+    drumsToggle.setBounds    (opt.removeFromLeft (80));
+    hostTempoToggle.setBounds(opt.removeFromLeft (130));
+    drumsVolLabel.setBounds  (opt.removeFromLeft (52));
     drumsVolSlider.setBounds (opt);
 
-    area.removeFromTop (8);
-    autoBounds = area.reduced (0, 4);
+    area.removeFromTop (10);
+
+    // ----- Auto-BPM -----
+    autoBounds = area.reduced (0, 2);
     autoPanel.setBounds (autoBounds);
     layoutAutoPanel();
 }
@@ -287,47 +312,52 @@ void MetronomeVSTAudioProcessorEditor::resized()
 void MetronomeVSTAudioProcessorEditor::layoutAutoPanel()
 {
     auto r = autoPanel.getLocalBounds().reduced (14, 12);
-    auto head = r.removeFromTop (28);
-    autoHeader.setBounds (head.removeFromLeft (100));
-    autoBpmToggle.setBounds (head.removeFromLeft (48).withSizeKeepingCentre (46, 22));
 
-    auto ctrl = r.removeFromTop (28);
-    autoLoopToggle.setBounds (ctrl.removeFromLeft (70));
-    autoReverseToggle.setBounds (ctrl.removeFromLeft (90));
-    autoResetBtn.setBounds (ctrl.removeFromRight (72).withHeight (26));
+    // Строка заголовка: "Auto-BPM" + переключатель
+    auto headRow = r.removeFromTop (26);
+    autoHeader.setBounds (headRow.removeFromLeft (100));
+    autoBpmToggle.setBounds (headRow.removeFromLeft (46).withSizeKeepingCentre (44, 22));
 
-    r.removeFromTop (6);
+    r.removeFromTop (8);
+
+    // Строка управления: Loop, Reverse, Reset
+    auto ctrlRow = r.removeFromTop (26);
+    autoLoopToggle.setBounds    (ctrlRow.removeFromLeft (70));
+    autoReverseToggle.setBounds (ctrlRow.removeFromLeft (90));
+    autoResetBtn.setBounds      (ctrlRow.removeFromRight (64).withHeight (24));
+
+    r.removeFromTop (10);
+
+    // Сетка 2×2: Min, Max, Step, Every
     const int colW = r.getWidth() / 2;
+    auto left  = r.removeFromLeft (colW).reduced (4, 0);
+    auto right = r.reduced (4, 0);
 
-    auto layoutField = [] (juce::Rectangle<int> col, juce::Label& lbl, juce::Component& field)
+    auto layoutField = [] (juce::Rectangle<int> col, juce::Label& lbl, juce::Component& fld)
     {
-        lbl.setBounds (col.removeFromTop (16));
-        field.setBounds (col.removeFromTop (44));
+        lbl.setBounds (col.removeFromTop (14));
+        fld.setBounds (col.removeFromTop (48));
     };
 
-    auto c1 = r.removeFromLeft (colW).reduced (4, 0);
-    auto c2 = r.reduced (4, 0);
+    layoutField (left.removeFromTop  (64), autoMinLabel,   autoMinSlider);
+    layoutField (left.removeFromTop  (64), autoStepLabel,  autoStepSlider);
+    layoutField (right.removeFromTop (64), autoMaxLabel,   autoMaxSlider);
 
-    auto minCol = c1.removeFromTop (64);
-    auto stepCol = c1.removeFromTop (64);
-    auto maxCol = c2.removeFromTop (64);
-    auto everyCol = c2.removeFromTop (64);
-
-    layoutField (minCol, autoMinLabel, autoMinSlider);
-    layoutField (stepCol, autoStepLabel, autoStepSlider);
-    layoutField (maxCol, autoMaxLabel, autoMaxSlider);
-    layoutField (everyCol, autoEveryLabel, autoEverySlider);
-
-    auto unitArea = everyCol.withHeight (28).withWidth (100);
-    juce::ignoreUnused (unitArea);
-    autoUnitBox.setBounds (autoEverySlider.getBounds().withY (autoEverySlider.getBottom() + 2).withHeight (26).withWidth (100));
+    // "Every" + unit selector
+    auto everyTop = right.removeFromTop (64);
+    autoEveryLabel.setBounds (everyTop.removeFromTop (14));
+    autoEverySlider.setBounds (everyTop.removeFromTop (48));
+    autoUnitBox.setBounds (autoEverySlider.getBounds()
+                               .withY      (autoEverySlider.getBottom() + 4)
+                               .withHeight (24)
+                               .withWidth  (100));
 }
 
 void MetronomeVSTAudioProcessorEditor::updateStartStopButtons()
 {
     const bool running = audioProcessor.isMetronomeRunning();
     startBtn.setEnabled (! running);
-    stopBtn.setEnabled (running);
+    stopBtn.setEnabled  (running);
 }
 
 void MetronomeVSTAudioProcessorEditor::updateProfileTabs()
@@ -335,7 +365,8 @@ void MetronomeVSTAudioProcessorEditor::updateProfileTabs()
     for (int i = 0; i < 5; ++i)
     {
         profileTabs[i].setColour (juce::TextButton::textColourOffId,
-                                  i == activeProfile ? MetronomeTheme::accent : MetronomeTheme::subtext);
+                                  i == activeProfile ? MetronomeTheme::accent
+                                                     : MetronomeTheme::subtext);
         profileTabs[i].setColour (juce::TextButton::textColourOnId, MetronomeTheme::accent);
     }
 }
@@ -344,26 +375,23 @@ void MetronomeVSTAudioProcessorEditor::updateAutoPanelEnabled()
 {
     const bool en = autoBpmToggle.getToggleState();
     autoPanel.setAlpha (en ? 1.0f : 0.5f);
-    autoMinSlider.setEnabled (en);
-    autoMaxSlider.setEnabled (en);
-    autoStepSlider.setEnabled (en);
-    autoEverySlider.setEnabled (en);
-    autoLoopToggle.setEnabled (en);
-    autoReverseToggle.setEnabled (en);
-    autoResetBtn.setEnabled (en);
-    autoUnitBox.setEnabled (en);
+    for (auto* c : { (juce::Component*) &autoMinSlider, &autoMaxSlider,
+                                        &autoStepSlider, &autoEverySlider,
+                                        &autoLoopToggle, &autoReverseToggle,
+                                        &autoResetBtn,   &autoUnitBox })
+        c->setEnabled (en);
 }
 
 void MetronomeVSTAudioProcessorEditor::timerCallback()
 {
     updateStartStopButtons();
 
-    const auto& eng = audioProcessor.getEngine();
-    const int beats = (int) *audioProcessor.getAPVTS().getRawParameterValue (ParamIDs::beatsPerBar) + 1;
+    const auto& eng   = audioProcessor.getEngine();
+    const int   beats = (int) *audioProcessor.getAPVTS().getRawParameterValue (ParamIDs::beatsPerBar) + 1;
     beatVisualizer.setBeats (beats, eng.getCurrentBeat(), eng.getBeatProgress());
 
     const int t = eng.getTotalTimeSec();
-    totalTimeLabel.setText ("Total Time: " + juce::String (t / 60).paddedLeft ('0', 2) + ":"
+    totalTimeLabel.setText (juce::String (t / 60).paddedLeft ('0', 2) + ":"
                             + juce::String (t % 60).paddedLeft ('0', 2),
                             juce::dontSendNotification);
 
