@@ -174,11 +174,16 @@ void MetronomeEngine::triggerClick (bool accented)
     if (auto* v = allocateClickVoice())
     {
         v->active = true;
-        v->phase = 0.0;
-        v->env = 1.0;
-        v->freq = accented ? 1600.0 : 1000.0;
-        v->gain = (accented ? 0.9f : 0.6f) * params.clickVolume;
-        v->decay = 1.0 / (sampleRate * 0.06);
+        v->phase  = 0.0;
+        v->env    = 1.0;
+        v->freq   = accented ? 1600.0 : 1000.0;
+        v->gain   = (accented ? 0.85f : 0.55f) * params.clickVolume;
+
+        // Экспоненциальное затухание: env *= decay каждый сэмпл.
+        // decay = exp(-1 / (sampleRate * длительность_сек))
+        // ~40мс для акцента, ~30мс для обычного бита — короткий чёткий щелчок.
+        const double durationSec = accented ? 0.040 : 0.030;
+        v->decay = std::exp (-1.0 / (sampleRate * durationSec));
     }
 }
 
@@ -252,13 +257,14 @@ void MetronomeEngine::renderAudio (float* left, float* right, int numSamples)
             if (! v.active)
                 continue;
 
-            // ФИКС 1: убрано условие `high &&` — теперь оба вида клика (акцент и обычный)
-            // генерируют звук. Ранее неакцентированные биты (freq <= 1200) всегда давали out=0.
-            const float out = (v.phase < 0.002 * sampleRate) ? 1.0f : 0.0f;
-            s += out * (float) v.env * v.gain;
+            // Синусоидальный клик: тон на v.freq Гц с экспоненциальной огибающей.
+            // Акцент (1600 Гц) звучит выше и громче, обычный бит (1000 Гц) — ниже.
+            const double twoPi = 2.0 * 3.14159265358979323846;
+            const float sine = (float) std::sin (twoPi * v.freq * v.phase / sampleRate);
+            s += sine * (float) v.env * v.gain;
             v.phase += 1.0;
-            v.env -= v.decay;
-            if (v.phase > sampleRate * 0.07 || v.env <= 0.0)
+            v.env *= v.decay;  // экспоненциальное затухание (decay теперь коэффициент < 1)
+            if (v.env < 0.001f)
                 v.active = false;
         }
 
@@ -345,7 +351,7 @@ void MetronomeEngine::startRunningFromDownbeat()
 {
     phase = Phase::running;
     scheduleClick (transportSamples, true);
-    onDownbeat();
+    onDownbeat (transportSamples);
 
     // ФИКС 2: бит 0 (даунбит) уже отыгран выше — выставляем currentBeat=1,
     // чтобы processRunning не вызвал onDownbeat() повторно через samplesPerBeat,
@@ -427,13 +433,14 @@ void MetronomeEngine::maybeAutoAdvance (int beatIndex)
     lastBeatIndex = beatIndex;
 }
 
-void MetronomeEngine::onDownbeat()
+void MetronomeEngine::onDownbeat (int64_t barStartSample)
 {
-    scheduleDrumsForBar (transportSamples);
+    scheduleDrumsForBar (barStartSample);
 
     if (crashOnNextDownbeat && params.drumsEnabled)
     {
-        scheduleHit (transportSamples, SampleBank::Sample::crash, 0.5f);
+        // Краш привязан к точной позиции начала бара, а не к началу блока
+        scheduleHit (barStartSample, SampleBank::Sample::crash, 0.5f);
         crashOnNextDownbeat = false;
     }
 
@@ -534,7 +541,7 @@ void MetronomeEngine::processRunning (int numSamples)
             scheduleClick (t, accented);
 
             if (currentBeat == 0)
-                onDownbeat();
+                onDownbeat (t); // передаём точную позицию бита, а не начало блока
 
             currentBeat = (currentBeat + 1) % juce::jmax (1, params.beatsPerBar);
         }
@@ -575,7 +582,12 @@ float MetronomeEngine::process (juce::AudioBuffer<float>& buffer,
     {
         fireScheduledHitsUpTo (blockEnd);
         if (blockEnd >= countdownEndSample)
+        {
+            // ФИКС 4: устанавливаем transportSamples точно в момент окончания отсчёта,
+            // чтобы первый даунбит и барабаны не смещались к началу текущего блока.
+            transportSamples = countdownEndSample;
             startRunningFromDownbeat();
+        }
         transportSamples = blockEnd;
     }
     else if (phase == Phase::running)

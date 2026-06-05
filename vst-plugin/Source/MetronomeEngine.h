@@ -51,7 +51,7 @@ public:
     float getBeatProgress() const;
     int getTotalTimeSec() const { return totalTimeSec; }
     juce::String getStatusTimerText() const;
-    /** 0 = no overlay; 3,2,1 during countdown. */
+    /** 0 = нет оверлея; 3, 2, 1 во время отсчёта. */
     int getCountdownDisplay() const;
 
 private:
@@ -91,7 +91,7 @@ private:
         double env = 0.0;
         float gain = 0.0f;
         double freq = 1000.0;
-        double decay = 0.001;
+        double decay = 0.999;  // мультипликативный коэффициент для экспоненциального затухания
     };
 
     SampleBank sampleBank;
@@ -142,5 +142,6 @@ private:
     void scheduleDrumsForBar (int64_t barStartSample);
     void maybeAutoAdvance (int beatIndex);
     void bumpBpm();
-    void onDownbeat();
+    // barStartSample — точная позиция начала бара в сэмплах (не начало блока)
+    void onDownbeat (int64_t barStartSample);
 };
