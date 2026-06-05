@@ -87,11 +87,13 @@ private:
     struct ClickVoice
     {
         bool active = false;
-        double phase = 0.0;
-        double env = 0.0;
-        float gain = 0.0f;
-        double freq = 1000.0;
-        double decay = 0.999;  // мультипликативный коэффициент для экспоненциального затухания
+        double oscPhase = 0.0;           // фаза осциллятора (в сэмплах)
+        double env = 0.0001;             // текущая амплитуда огибающей
+        float peakGain = 0.9f;           // пиковый уровень (конец атаки)
+        double freq = 1000.0;            // частота: 1600 Гц акцент, 1000 Гц обычный
+        double attackRate = 1.1;         // множитель роста на этапе атаки
+        double decayRate = 0.999;        // множитель спада на этапе затухания
+        double attackEndSample = 88.0;   // номер сэмпла, где заканчивается атака (~2мс)
     };
 
     SampleBank sampleBank;

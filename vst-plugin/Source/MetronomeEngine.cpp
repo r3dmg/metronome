@@ -173,17 +173,21 @@ void MetronomeEngine::triggerClick (bool accented)
 {
     if (auto* v = allocateClickVoice())
     {
-        v->active = true;
-        v->phase  = 0.0;
-        v->env    = 1.0;
-        v->freq   = accented ? 1600.0 : 1000.0;
-        v->gain   = (accented ? 0.85f : 0.55f) * params.clickVolume;
+        // Точная копия JS clickAt():
+        //   o.type = 'square', freq 1600/1000 Гц
+        //   gain: 0.0001 → peak за 2мс (атака) → 0.0001 к 60мс (спад), stop на 70мс
+        const double peakGain      = (accented ? 0.9 : 0.6) * (double) params.clickVolume;
+        const double attackSamples = 0.002 * sampleRate;
+        const double decaySamples  = 0.058 * sampleRate;
 
-        // Экспоненциальное затухание: env *= decay каждый сэмпл.
-        // decay = exp(-1 / (sampleRate * длительность_сек))
-        // ~40мс для акцента, ~30мс для обычного бита — короткий чёткий щелчок.
-        const double durationSec = accented ? 0.040 : 0.030;
-        v->decay = std::exp (-1.0 / (sampleRate * durationSec));
+        v->active          = true;
+        v->oscPhase        = 0.0;
+        v->env             = 0.0001;
+        v->peakGain        = (float) peakGain;
+        v->freq            = accented ? 1600.0 : 1000.0;
+        v->attackEndSample = attackSamples;
+        v->attackRate      = std::pow (peakGain / 0.0001, 1.0 / attackSamples);
+        v->decayRate       = std::pow (0.0001 / peakGain, 1.0 / decaySamples);
     }
 }
 
@@ -257,14 +261,27 @@ void MetronomeEngine::renderAudio (float* left, float* right, int numSamples)
             if (! v.active)
                 continue;
 
-            // Синусоидальный клик: тон на v.freq Гц с экспоненциальной огибающей.
-            // Акцент (1600 Гц) звучит выше и громче, обычный бит (1000 Гц) — ниже.
+            // Квадратная волна (как o.type='square' в JS): sign(sin(phase))
             const double twoPi = 2.0 * 3.14159265358979323846;
-            const float sine = (float) std::sin (twoPi * v.freq * v.phase / sampleRate);
-            s += sine * (float) v.env * v.gain;
-            v.phase += 1.0;
-            v.env *= v.decay;  // экспоненциальное затухание (decay теперь коэффициент < 1)
-            if (v.env < 0.001f)
+            const double sineVal = std::sin (twoPi * v.freq * v.oscPhase / sampleRate);
+            const float square = sineVal >= 0.0 ? 1.0f : -1.0f;
+            s += square * (float) v.env;
+
+            // Двухфазная огибающая как в JS:
+            // фаза 1 (0..2мс):  экспоненциальный рост  0.0001 → peakGain
+            // фаза 2 (2..60мс): экспоненциальный спад  peakGain → 0.0001
+            if (v.oscPhase < v.attackEndSample)
+            {
+                v.env *= v.attackRate;
+                if (v.env > v.peakGain) v.env = v.peakGain;
+            }
+            else
+            {
+                v.env *= v.decayRate;
+            }
+
+            v.oscPhase += 1.0;
+            if (v.oscPhase >= 0.07 * sampleRate || v.env < 1e-5)
                 v.active = false;
         }
 
