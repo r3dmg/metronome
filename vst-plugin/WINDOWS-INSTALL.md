@@ -1,6 +1,6 @@
 # Metronome — установка на Windows (FL Studio)
 
-## Скачать готовый плагин (проще всего)
+## Скачать готовый плагин
 
 **Прямая ссылка (после сборки на GitHub):**
 
@@ -21,8 +21,3 @@ https://github.com/r3dmg/metronome/releases/download/metronome-windows/Metronome
 2. FL Studio → **Options → Manage plugins** → **Find more plugins** / **Refresh**.
 3. Включите **Metronome**, добавьте на дорожку, нажмите **Play**.
 
-## Содержимое архива
-
-- Встроенные WAV (kick, snare, hi-hat, crash, tom)
-- Отсчёт **3 → 2 → 1** (переключатель **Countdown 3s**)
-- Синхронизация BPM с FL (**Sync FL tempo**)

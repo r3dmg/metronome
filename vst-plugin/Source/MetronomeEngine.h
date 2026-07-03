@@ -115,6 +115,7 @@ private:
     double autoElapsedSec = 0.0;
     int lastBeatIndex = -1;
     bool crashOnNextDownbeat = false;
+    bool skipNextBeatBoundary = false;
 
     double samplesPerBeat = 0.0;
     double sampleCounter = 0.0;

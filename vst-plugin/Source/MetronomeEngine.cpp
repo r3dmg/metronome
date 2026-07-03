@@ -69,6 +69,7 @@ void MetronomeEngine::reset()
     autoElapsedSec = 0.0;
     lastBeatIndex = -1;
     crashOnNextDownbeat = false;
+    skipNextBeatBoundary = false;
     sampleCounter = 0.0;
     internalPlaying = false;
     totalTimeSec = 0;
@@ -171,11 +172,25 @@ MetronomeEngine::ClickVoice* MetronomeEngine::allocateClickVoice()
 
 void MetronomeEngine::triggerClick (bool accented)
 {
+    const auto clickSample = accented ? SampleBank::Sample::clickAccent : SampleBank::Sample::clickNormal;
+    const auto* buf = sampleBank.getBuffer (clickSample);
+
+    if (buf != nullptr && buf->getNumSamples() > 0)
+    {
+        if (auto* v = allocateSampleVoice())
+        {
+            const double srcRate = sampleBank.getSourceSampleRate (clickSample);
+            v->active = true;
+            v->sample = clickSample;
+            v->position = 0.0;
+            v->increment = srcRate > 0.0 ? srcRate / sampleRate : 1.0;
+            v->gain = (accented ? 0.9f : 0.6f) * params.clickVolume;
+        }
+        return;
+    }
+
     if (auto* v = allocateClickVoice())
     {
-        // Точная копия JS clickAt():
-        //   o.type = 'square', freq 1600/1000 Гц
-        //   gain: 0.0001 → peak за 2мс (атака) → 0.0001 к 60мс (спад), stop на 70мс
         const double peakGain      = (accented ? 0.9 : 0.6) * (double) params.clickVolume;
         const double attackSamples = 0.002 * sampleRate;
         const double decaySamples  = 0.058 * sampleRate;
@@ -325,6 +340,7 @@ void MetronomeEngine::beginCountdownOrRunning()
     autoElapsedSec = 0.0;
     lastBeatIndex = -1;
     crashOnNextDownbeat = false;
+    skipNextBeatBoundary = false;
     sampleCounter = 0.0;
     scheduled.clear();
 
@@ -369,11 +385,13 @@ void MetronomeEngine::startRunningFromDownbeat()
     phase = Phase::running;
     scheduleClick (transportSamples, true);
     onDownbeat (transportSamples);
+    maybeAutoAdvance (0);
 
-    // ФИКС 2: бит 0 (даунбит) уже отыгран выше — выставляем currentBeat=1,
-    // чтобы processRunning не вызвал onDownbeat() повторно через samplesPerBeat,
-    // что приводило к дублированию клика и барабанов первого бара.
-    currentBeat = 1;
+    // Как в веб-версии: currentBeat=0, прогресс растёт от 0 до 1 за первую долю.
+    // skipNextBeatBoundary предотвращает повторный клик/даунбит на первой границе такта.
+    currentBeat = 0;
+    sampleCounter = 0.0;
+    skipNextBeatBoundary = true;
 }
 
 void MetronomeEngine::bumpBpm()
@@ -552,15 +570,24 @@ void MetronomeEngine::processRunning (int numSamples)
         if (sampleCounter >= samplesPerBeat)
         {
             sampleCounter -= samplesPerBeat;
-            maybeAutoAdvance (currentBeat);
 
-            const bool accented = currentBeat == 0;
-            scheduleClick (t, accented);
+            if (skipNextBeatBoundary)
+            {
+                skipNextBeatBoundary = false;
+                currentBeat = (currentBeat + 1) % juce::jmax (1, params.beatsPerBar);
+            }
+            else
+            {
+                maybeAutoAdvance (currentBeat);
 
-            if (currentBeat == 0)
-                onDownbeat (t); // передаём точную позицию бита, а не начало блока
+                const bool accented = currentBeat == 0;
+                scheduleClick (t, accented);
 
-            currentBeat = (currentBeat + 1) % juce::jmax (1, params.beatsPerBar);
+                if (currentBeat == 0)
+                    onDownbeat (t);
+
+                currentBeat = (currentBeat + 1) % juce::jmax (1, params.beatsPerBar);
+            }
         }
 
         sampleCounter += 1.0;

@@ -150,7 +150,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     let audioCtx=null, masterGain=null, clickGain=null, drumGain=null;
     let isRunning=false, currentBeat=0, nextNoteTime=0, timerID=null;
 
-    const samples={kick:null,snare:null,hhc:null,hho:null,crash:null,tom:null};
+    const samples={kick:null,snare:null,hhc:null,hho:null,crash:null,tom:null,clickNormal:null,clickAccent:null};
 
     // Планировщик
     const lookahead=25; // ms
@@ -171,7 +171,9 @@ window.addEventListener('DOMContentLoaded',()=>{
       hhc: 'audio/hihat-closed.wav',
       hho: 'audio/hihat-open.wav',
       crash: 'audio/crash.wav',
-      tom: 'audio/tom.wav'
+      tom: 'audio/tom.wav',
+      clickNormal: 'audio/metronome_beat_1.mp3',
+      clickAccent: 'audio/metronome_beat_1_accent.mp3'
     };
 
     // === Паттерн барабанов из Accelonome ===
@@ -231,8 +233,14 @@ window.addEventListener('DOMContentLoaded',()=>{
     async function loadSample(url){ const ab=await fetchAB(url); return await audioCtx.decodeAudioData(ab.slice(0)); }
     async function loadSamples(){ initAudio(); for(const [k,u] of Object.entries(SAMPLE_URLS)){ try{ samples[k]=await loadSample(u);}catch(e){ samples[k]=null; console.warn('Не удалось загрузить',k,u,e);} } }
 
-    // Метроно﻿м клик
-    function clickAt(t, accented){ const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='square'; o.frequency.setValueAtTime(accented?1600:1000,t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(accented?0.9:0.6,t+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g).connect(clickGain); o.start(t); o.stop(t+0.07); }
+    // Метроном клик
+    function playClickSample(buf, when, vol){ if(!buf) return; const src=audioCtx.createBufferSource(); src.buffer=buf; const g=audioCtx.createGain(); g.gain.setValueAtTime(Math.min(1,Math.max(0,vol)), when); src.connect(g).connect(clickGain); src.start(when); }
+    function clickAt(t, accented){
+      const buf = accented ? samples.clickAccent : samples.clickNormal;
+      const vol = accented ? 0.9 : 0.6;
+      if(buf){ playClickSample(buf, t, vol); return; }
+      const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='square'; o.frequency.setValueAtTime(accented?1600:1000,t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g).connect(clickGain); o.start(t); o.stop(t+0.07);
+    }
 
     // Воспроизведение сэмплов + фолбэки для хетов
     function playSample(buf, when, vol){ if(!buf) return; const src=audioCtx.createBufferSource(); src.buffer=buf; const g=audioCtx.createGain(); g.gain.setValueAtTime(Math.min(1,Math.max(0,vol)), when); src.connect(g).connect(drumGain); src.start(when); }
@@ -419,7 +427,7 @@ window.addEventListener('DOMContentLoaded',()=>{
         isRunning=true; autoBarCounter=0; autoDir=1; lastBeatIndex=null; autoElapsedSec=0; autoElapsedSecApprox=0; autoLastUIStamp=performance.now(); barsSinceStart=0; patternAlt=0; currentBar=1; crashOnNextDownbeat=false; const cfg=autoCfg(); if(cfg.enabled && (bpm()<cfg.minV || bpm()>cfg.maxV)) applyBpm(cfg.minV); runToken++; clearVisuals(); renderBar(); currentBeat=0; nextNoteTime = audioCtx.currentTime; if(audioCtx && drumGain) drumGain.gain.setValueAtTime(Number(drumsVol.value), audioCtx.currentTime); scheduler(); startBtn.disabled=true; stopBtn.disabled=false; startUITimer(); updateAutoUI(); updateBarsCounterUI();
         totalTimerID = setInterval(() => { totalTime++; updateTotalTime(); }, 1000);
     }
-    function stop(){ if(!isRunning) return; isRunning=false; if(timerID){clearTimeout(timerID); timerID=null;} startBtn.disabled=false; stopBtn.disabled=true; currentBeat=0; currentBar=1; runToken++; clearVisuals(); stopUITimer(); nextStepTimer.textContent='—:—'; nextStepTimer.style.visibility='hidden'; if(totalTimerID){ clearInterval(totalTimerID); totalTimerID=null; } if(audioCtx && drumGain) drumGain.gain.setValueAtTime(0, audioCtx.currentTime); audioCtx = null; samples = {kick:null,snare:null,hhc:null,hho:null,crash:null,tom:null}; }
+    function stop(){ if(!isRunning) return; isRunning=false; if(timerID){clearTimeout(timerID); timerID=null;} startBtn.disabled=false; stopBtn.disabled=true; currentBeat=0; currentBar=1; runToken++; clearVisuals(); stopUITimer(); nextStepTimer.textContent='—:—'; nextStepTimer.style.visibility='hidden'; if(totalTimerID){ clearInterval(totalTimerID); totalTimerID=null; } if(audioCtx && drumGain) drumGain.gain.setValueAtTime(0, audioCtx.currentTime); audioCtx = null; samples = {kick:null,snare:null,hhc:null,hho:null,crash:null,tom:null,clickNormal:null,clickAccent:null}; }
 
     // Привязки UI
     bpmRange.addEventListener('input',e=>{ bpmInput.value=e.target.value; });

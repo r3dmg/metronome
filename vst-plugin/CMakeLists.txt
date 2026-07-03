@@ -34,6 +34,8 @@ juce_add_binary_data(MetronomeData
         Resources/audio/hihat_open.wav
         Resources/audio/crash.wav
         Resources/audio/tom.wav
+        Resources/audio/metronome_beat_1.wav
+        Resources/audio/metronome_beat_1_accent.wav
 )
 
 juce_add_plugin(MetronomeVST

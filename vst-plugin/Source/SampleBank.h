@@ -15,6 +15,8 @@ public:
         hatOpen,
         crash,
         tom,
+        clickNormal,
+        clickAccent,
         count
     };
 

@@ -13,7 +13,9 @@ void SampleBank::prepare (double hostSampleRate)
           && loadFromMemory (Sample::hatClosed, BinaryData::hihat_closed_wav, BinaryData::hihat_closed_wavSize)
           && loadFromMemory (Sample::hatOpen, BinaryData::hihat_open_wav, BinaryData::hihat_open_wavSize)
           && loadFromMemory (Sample::crash, BinaryData::crash_wav, BinaryData::crash_wavSize)
-          && loadFromMemory (Sample::tom, BinaryData::tom_wav, BinaryData::tom_wavSize);
+          && loadFromMemory (Sample::tom, BinaryData::tom_wav, BinaryData::tom_wavSize)
+          && loadFromMemory (Sample::clickNormal, BinaryData::metronome_beat_1_wav, BinaryData::metronome_beat_1_wavSize)
+          && loadFromMemory (Sample::clickAccent, BinaryData::metronome_beat_1_accent_wav, BinaryData::metronome_beat_1_accent_wavSize);
 }
 
 bool SampleBank::loadFromMemory (Sample s, const void* data, int dataSize)
