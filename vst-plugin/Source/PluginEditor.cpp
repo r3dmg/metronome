@@ -392,8 +392,13 @@ void MetronomeVSTAudioProcessorEditor::timerCallback()
     updateStartStopButtons();
 
     const auto& eng   = audioProcessor.getEngine();
-    const int   beats = (int) *audioProcessor.getAPVTS().getRawParameterValue (ParamIDs::beatsPerBar) + 1;
-    beatVisualizer.setBeats (beats, eng.getCurrentBeat(), eng.getBeatProgress());
+    const int beats = (int) *audioProcessor.getAPVTS().getRawParameterValue (ParamIDs::beatsPerBar) + 1;
+// currentBeat — это СЛЕДУЮЩИЙ бит для планировщика.
+// Для visualizer нужен ТЕКУЩИЙ (тот что сейчас звучит) — он на 1 меньше.
+const int displayBeat = (eng.getCurrentBeat() > 0)
+                            ? eng.getCurrentBeat() - 1
+                            : beats - 1;
+beatVisualizer.setBeats (beats, displayBeat, eng.getBeatProgress());
 
     const int t = eng.getTotalTimeSec();
     totalTimeLabel.setText (juce::String (t / 60).paddedLeft ('0', 2) + ":"

@@ -1,0 +1,4 @@
+# Hashes of file build rules.
+c84cdd6a79b4b6f326f2f8eac63bb329 MetronomeVST_artefacts/JuceLibraryCode/JuceHeader.h
+07552d1324be8478df61a1af628978a2 MetronomeVST_artefacts/JuceLibraryCode/MetronomeVST_resources.rc
+e6963a2dd996481cc3300eb0ab459fc8 juce_binarydata_MetronomeData/JuceLibraryCode/BinaryData1.cpp
