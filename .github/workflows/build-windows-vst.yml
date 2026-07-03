@@ -24,7 +24,7 @@ jobs:
           $attempts = 3
           for ($i = 1; $i -le $attempts; $i++) {
             Write-Host "CMake configure attempt $i/$attempts"
-            cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+            cmake -B build -G "Visual Studio 18 2026" -A x64 -DCMAKE_BUILD_TYPE=Release
             if ($LASTEXITCODE -eq 0) { exit 0 }
             if ($i -lt $attempts) { Start-Sleep -Seconds 15 }
           }
