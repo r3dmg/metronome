@@ -69,7 +69,6 @@ void MetronomeEngine::reset()
     autoElapsedSec = 0.0;
     lastBeatIndex = -1;
     crashOnNextDownbeat = false;
-    skipNextBeatBoundary = false;
     sampleCounter = 0.0;
     internalPlaying = false;
     totalTimeSec = 0;
@@ -340,7 +339,6 @@ void MetronomeEngine::beginCountdownOrRunning()
     autoElapsedSec = 0.0;
     lastBeatIndex = -1;
     crashOnNextDownbeat = false;
-    skipNextBeatBoundary = false;
     sampleCounter = 0.0;
     scheduled.clear();
 
@@ -387,11 +385,8 @@ void MetronomeEngine::startRunningFromDownbeat()
     onDownbeat (transportSamples);
     maybeAutoAdvance (0);
 
-    // Как в веб-версии: currentBeat=0, прогресс растёт от 0 до 1 за первую долю.
-    // skipNextBeatBoundary предотвращает повторный клик/даунбит на первой границе такта.
     currentBeat = 0;
     sampleCounter = 0.0;
-    skipNextBeatBoundary = true;
 }
 
 void MetronomeEngine::bumpBpm()
@@ -571,23 +566,14 @@ void MetronomeEngine::processRunning (int numSamples)
         {
             sampleCounter -= samplesPerBeat;
 
-            if (skipNextBeatBoundary)
-            {
-                skipNextBeatBoundary = false;
-                currentBeat = (currentBeat + 1) % juce::jmax (1, params.beatsPerBar);
-            }
-            else
-            {
-                maybeAutoAdvance (currentBeat);
+            currentBeat = (currentBeat + 1) % juce::jmax (1, params.beatsPerBar);
+            maybeAutoAdvance (currentBeat);
 
-                const bool accented = currentBeat == 0;
-                scheduleClick (t, accented);
+            const bool accented = currentBeat == 0;
+            scheduleClick (t, accented);
 
-                if (currentBeat == 0)
-                    onDownbeat (t);
-
-                currentBeat = (currentBeat + 1) % juce::jmax (1, params.beatsPerBar);
-            }
+            if (currentBeat == 0)
+                onDownbeat (t);
         }
 
         sampleCounter += 1.0;
